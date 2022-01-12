@@ -1,0 +1,47 @@
+#! /usr/bin/env bash
+
+#https://github.com/tholman/intense-images
+#exiv2intense
+#
+
+version="0.1"
+rm  tmp 2>/dev/null
+
+IMGDat="Exif.Image.DateTime"
+GPSLat="Exif.GPSInfo.GPSLatitude"
+GPSLon="Exif.GPSInfo.GPSLongitude"
+GPSAlt="Exif.GPSInfo.GPSAltitude"
+
+pat1="\/1 "
+pat2="\/10000"
+repl=" "
+
+for img in `ls  *.jpg`
+do
+
+	Date=`exiv2 -g $IMGDat -Pv "$img" | tr ":" " "`
+	
+	lat=`exiv2 -g $GPSLat -Pv "$img" |grep -v N`
+	lat=${lat//$pat1/$repl}
+	lat=${lat//$pat2/$repl}
+	
+	lon=`exiv2 -g $GPSLon -Pv "$img" |grep -v E`
+	lon=${lon//$pat1/$repl}
+	lon=${lon//$pat2/$repl}
+	
+	alt=`exiv2 -g $GPSAlt -Pv "$img" |grep [1-9] |bc`
+	
+	echo "$img $lat $lon $alt $Date" >> tmp 
+  
+done
+
+awk  '{ $2=$2+$3/60+$4/36000000 ; $5=$5+$6/60+$7/36000000; 
+print "<div class=¤img1¤ style=¤background-image: url(µassets/th/"$1"µ);¤ data-image=¤assets/img/"
+$1"¤ data-caption=¤Lat/Lon: "$2","$5" altitude: "$8"m le "$11"/"$10"/"$9" à "
+$12"h"$13":"$14"¤ data-title=¤¤ title=¤¤></div>"}'  tmp > e2i.txt
+
+replace ¤ \" µ \' -- e2i.txt
+
+exit 0
+ 
+ 
